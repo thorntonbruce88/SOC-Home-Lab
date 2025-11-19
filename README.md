@@ -3,7 +3,7 @@
 ##  <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/32539918-570f-4a01-a0f2-660f5fd5d158" />
 ---
 
-# **📘 Network Segmentation & VLAN Implementation Summary**
+# **⚙️ Network Segmentation & VLAN Implementation Summary**
 
 **Date:** 2025-11-18
 **Engineer:** Bruce Thornton
