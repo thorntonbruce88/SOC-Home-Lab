@@ -1,4 +1,4 @@
-## **🔬 Home Lab**
+## ****🔬 Home Lab****
 
 ##  <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/32539918-570f-4a01-a0f2-660f5fd5d158" />
 ---
@@ -198,7 +198,7 @@ All implemented on low-cost hardware following industry-aligned VLAN practices.
 
 
 
-# **📘 Persistent Reverse SSH Command-and-Control Infrastructure — Lab Report: Establishing Red Team Connectivity**
+# **🦹 Persistent Reverse SSH Command-and-Control Infrastructure — Lab Report: Establishing Red Team Connectivity**
 +--------------------------------------------------------------+
 |                        Pi 4 — C2 Server                      |
 |--------------------------------------------------------------|
