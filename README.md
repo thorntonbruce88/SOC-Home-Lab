@@ -1,2 +1,4 @@
-# SOC-Home-Lab
-An evolving repository dedicated to the pursuit of Cybersecurity excellence and learning. 
+## 🔬 Home Lab
+- **[Network Segmentation & VLAN Implementation Summary for SOC Home Lab]**
+
+-  
