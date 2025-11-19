@@ -181,7 +181,7 @@ All VLAN devices successfully received DHCP leases from pfSense.
 
 ---
 
-# **✅ Summary**
+# **8. Summary**
 
 The network was successfully rebuilt into a **clean, stable, enterprise-style segmented environment** after prior failed attempts. Using pfSense VLANs and the TL-SG108E safe VLAN configuration method, the lab now provides:
 
