@@ -1,7 +1,202 @@
 ## 🔬 Home Lab
 
 ##  <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/32539918-570f-4a01-a0f2-660f5fd5d158" />
-  
+---
+
+# 📘 **Network Segmentation & VLAN Implementation Summary**
+
+**Date:** 2025-11-18
+**Engineer:** Bruce Thornton
+**Environment:** pfSense + TP-Link TL-SG108E + Multi-VLAN Red Team/SOC Lab
+
+---
+
+# **1. Objective**
+
+To rebuild and properly segment a multi-device cybersecurity lab environment using **pfSense** and a **TP-Link TL-SG108E Easy Smart Switch**, ensuring:
+
+* Logical network segmentation
+* Isolated VLANs for SOC, Attacker, C2 Server, Victim, and Honeypot
+* Centralized routing/DHCP on pfSense
+* SOC monitoring visibility while maintaining realistic red-team boundaries
+* Safe, non-disruptive VLAN configuration on the TL-SG108E
+* Stable baseline for future **Security Onion / Elastic Stack** integration
+
+---
+
+# **2. Baseline Recovery**
+
+After previous failed VLAN attempts, the environment was restored to a clean operational state.
+
+## **2.1 pfSense Recovery**
+
+* Reset admin credentials via console (Option 3)
+* Restored access to webConfigurator
+* Verified LAN IP: **10.0.1.1/24**
+* Confirmed LAN DHCP active (**10.0.1.100–200**)
+
+## **2.2 Switch Recovery**
+
+* Factory reset TL-SG108E
+* Switch accessible at **192.168.0.1**
+* All ports default:
+
+  * VLAN1 untagged
+  * PVID = 1
+
+A reliable baseline was established for safe VLAN reconstruction.
+
+---
+
+# **3. VLAN Architecture (Target Design)**
+
+| VLAN   | Purpose               | Gateway   | Subnet       | Switch Port      |
+| ------ | --------------------- | --------- | ------------ | ---------------- |
+| **10** | SOC (Kali Purple)     | 10.0.10.1 | 10.0.10.0/24 | 2                |
+| **20** | DefenderBox (Victim)  | 10.0.20.1 | 10.0.20.0/24 | 3                |
+| **30** | Attacker Pi           | 10.0.30.1 | 10.0.30.0/24 | 4                |
+| **31** | C2 Server Pi          | 10.0.31.1 | 10.0.31.0/24 | 5                |
+| **50** | Honeypot (OpenCanary) | 10.0.50.1 | 10.0.50.0/24 | 6                |
+| **1**  | pfSense LAN (mgmt)    | 10.0.1.1  | 10.0.1.0/24  | 1 (7–8 optional) |
+
+---
+
+# **4. pfSense VLAN Configuration**
+
+## **4.1 VLAN Definitions**
+
+Under **Interfaces → Assignments → VLANs**, created:
+
+* VLAN10 (SOC)
+* VLAN20 (Victim)
+* VLAN30 (Attacker)
+* VLAN31 (C2)
+* VLAN50 (Honeypot)
+  (All on parent interface **ue0**)
+
+## **4.2 VLAN Interface Assignments**
+
+| Interface          | Static IP | Mask |
+| ------------------ | --------- | ---- |
+| VLAN10_SOC         | 10.0.10.1 | /24  |
+| VLAN20_DefenderBox | 10.0.20.1 | /24  |
+| VLAN30_Attacker    | 10.0.30.1 | /24  |
+| VLAN31_C2          | 10.0.31.1 | /24  |
+| VLAN50_HoneyPot    | 10.0.50.1 | /24  |
+
+**LAN (ue0)** remained: **10.0.1.1/24**
+→ This prevented lockout during build.
+
+## **4.3 DHCP Services**
+
+DHCP enabled per VLAN:
+
+* Ranges: **.100–.200** for each subnet
+* LAN DHCP remained active for stability
+
+---
+
+# **5. Switch Configuration (TP-Link Safe VLAN Method)**
+
+Because TL-SG108E “Easy Smart” switches enforce VLAN rules strictly, the safe method was used to avoid accidental lockouts.
+
+## **5.1 VLAN Membership**
+
+### **Port 1 (pfSense)**
+
+Tagged for all VLANs (Trunk):
+
+| VLAN | Tagged | Untagged        |
+| ---- | ------ | --------------- |
+| 10   | ✔      |                 |
+| 20   | ✔      |                 |
+| 30   | ✔      |                 |
+| 31   | ✔      |                 |
+| 50   | ✔      |                 |
+| 1    |        | ✔ (native VLAN) |
+
+### **Ports 2–6**
+
+Untagged members of their respective VLANs:
+
+* **Port 2 → VLAN 10**
+* **Port 3 → VLAN 20**
+* **Port 4 → VLAN 30**
+* **Port 5 → VLAN 31**
+* **Port 6 → VLAN 50**
+
+### **Ports 7–8**
+
+Left as VLAN1 for safety / management access.
+
+**VLAN1 left untouched** → prevents switch GUI lockout.
+
+## **5.2 PVID Assignments**
+
+| Port | PVID | Purpose                   |
+| ---- | ---- | ------------------------- |
+| 1    | 1    | pfSense trunk native VLAN |
+| 2    | 10   | SOC                       |
+| 3    | 20   | Victim                    |
+| 4    | 30   | Attacker                  |
+| 5    | 31   | C2                        |
+| 6    | 50   | Honeypot                  |
+| 7–8  | 1    | Spare/Mgmt                |
+
+PVID ensures untagged frames from devices enter the correct VLAN.
+
+---
+
+# **6. Validation Results**
+
+After finalizing VLAN membership and PVIDs:
+
+* SOC (port 2) → **10.0.10.x**
+* DefenderBox (port 3) → **10.0.20.x**
+* Attacker Pi (port 4) → **10.0.30.x**
+* C2 Pi (port 5) → **10.0.31.x**
+* OpenCanary (port 6) → **10.0.50.x**
+
+All VLAN devices successfully received DHCP leases from pfSense.
+
+**SOC VLAN intentionally allowed full outbound access** to reach Elastic/Kibana dashboards.
+
+---
+
+# **7. Final Network State**
+
+✔ pfSense routing all VLANs correctly
+✔ Switch enforcing VLAN isolation
+✔ DHCP working across each subnet
+✔ SOC VLAN connected to Elastic/Kibana
+✔ Devices isolated into proper red-team / blue-team zones
+✔ Stable base for:
+
+* Firewall tuning
+* IDS/IPS
+* Red-team testing
+* C2 operations
+* Honeypot telemetry
+* Full cyber-range workflows
+
+---
+
+# **✅ Summary**
+
+The network was successfully rebuilt into a **clean, stable, enterprise-style segmented environment** after prior failed attempts. Using pfSense VLANs and the TL-SG108E safe VLAN configuration method, the lab now provides:
+
+* Strong segmentation
+* Realistic red-team vs SOC boundaries
+* Centralized monitoring
+* Complete isolation between roles
+* Reliable routing and addressing
+* A professional-grade foundation for SOC analysis, adversary simulation, and research
+
+All implemented on low-cost hardware following industry-aligned VLAN practices.
+
+---
+
+
 
 # 📘 **Persistent Reverse SSH Command-and-Control Infrastructure — Lab Report: Establishing Red Team Connectivity**
 
