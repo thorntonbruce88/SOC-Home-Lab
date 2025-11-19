@@ -198,7 +198,7 @@ All implemented on low-cost hardware following industry-aligned VLAN practices.
 
 
 
-## 📘 **Persistent Reverse SSH Command-and-Control Infrastructure — Lab Report: Establishing Red Team Connectivity**
+# **📘 Persistent Reverse SSH Command-and-Control Infrastructure — Lab Report: Establishing Red Team Connectivity**
 +--------------------------------------------------------------+
 |                        Pi 4 — C2 Server                      |
 |--------------------------------------------------------------|
