@@ -425,7 +425,7 @@ The configuration operates silently on Pi 3 with no visible interactive shell.
 ## **7. Security Considerations**
 
 * Only outbound SSH is used — no exposed ports on Pi 3.
-* Ed25519 key-based authentication improves security and automation.
+* Ed***** key-based authentication improves security and automation.
 * Encrypted SSH transport prevents credential or command interception.
 * Pi 4 acts as a trusted control point.
 
