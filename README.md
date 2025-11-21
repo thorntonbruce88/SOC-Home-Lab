@@ -589,7 +589,7 @@ elasticsearch.ssl.verificationMode: "none"
 
 After correction:
 
-* Kibana successfully listened on port **5601**
+* Kibana successfully listened on port **$$$$**
 * UI accessible at:
 
 ```
