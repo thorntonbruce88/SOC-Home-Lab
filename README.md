@@ -206,7 +206,7 @@ All implemented on low-cost hardware following industry-aligned VLAN practices.
 | IP: 10.0.31.100                                              |
 |                                                              |
 | Listens on reverse SSH port:                                 |
-|     ssh bruce@localhost -p 2222                              |
+|     ssh bruce@localhost -p ****                              |
 |                                                              |
 | Provides operator access → SOC → Elastic → Log Review        |
 +---------------------------▲----------------------------------+
@@ -220,7 +220,7 @@ All implemented on low-cost hardware following industry-aligned VLAN practices.
 | Lives behind NAT (no inbound accessibility)                  |
 |                                                              |
 | Calls home using:                                            |
-|     ssh -N -R 2222:localhost:22 bruce@10.0.31.100            |
+|     ssh -N -R ****:localhost:** bruce@10.0.31.100            |
 |                                                              |
 | reverse-tunnel.sh runs at boot:                              |
 |   - sleep 60 (network wait)                                  |
@@ -306,7 +306,7 @@ This enables non-interactive SSH required for persistence.
 From Pi 3:
 
 ```bash
-ssh -N -R 2222:localhost:22 bruce@10.0.31.100
+ssh -N -R ****:localhost:** bruce@10.0.31.100
 ```
 
 **Explanation:**
@@ -314,12 +314,12 @@ ssh -N -R 2222:localhost:22 bruce@10.0.31.100
 | Component              | Purpose                                                |
 | ---------------------- | ------------------------------------------------------ |
 | `-N`                   | Tunnel only, no remote shell                           |
-| `-R 2222:localhost:22` | Makes Pi 3’s SSH service available on Pi 4’s port 2222 |
+| `-R ****:localhost:**` | Makes Pi 3’s SSH service available on Pi 4’s port **** |
 
 Pi 4 accesses Pi 3 via:
 
 ```bash
-ssh bruce@localhost -p 2222
+ssh bruce@localhost -p ****
 ```
 
 ---
@@ -338,7 +338,7 @@ sleep 60
 
 while true; do
   /usr/bin/ssh -N -o ServerAliveInterval=30 -o ServerAliveCountMax=3 \
-    -R 2222:localhost:22 bruce@10.0.31.100
+    -R ****:localhost:** bruce@10.0.31.100
   sleep 5
 done
 ```
@@ -375,7 +375,7 @@ bash -x ~/reverse-tunnel.sh
 Pi 4 confirmed the tunnel with:
 
 ```bash
-ssh bruce@localhost -p 2222
+ssh bruce@localhost -p ****
 ```
 
 ### **5.2 Boot Persistence Test**
@@ -389,7 +389,7 @@ sudo reboot
 Pi 4 successfully connected again:
 
 ```bash
-ssh bruce@localhost -p 2222
+ssh bruce@localhost -p ****
 ```
 
 This verified:
@@ -444,13 +444,13 @@ The configuration operates silently on Pi 3 with no visible interactive shell.
 * Add additional reverse tunnels (web, VNC, APIs):
 
   ```bash
-  -R 8081:localhost:8080
-  -R 5901:localhost:5900
+  -R ****:localhost:****
+  -R ****:localhost:****
   ```
 * Implement SOCKS5 proxy pivot:
 
   ```bash
-  ssh -D 1080 bruce@localhost -p 2222
+  ssh -D **** bruce@localhost -p ****
   ```
 
 ### **Stealth**
